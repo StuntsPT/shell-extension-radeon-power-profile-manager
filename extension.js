@@ -13,16 +13,12 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
 
-const Gettext = imports.gettext;
-const _ = Gettext.domain('radeonpowerprofilemanager').gettext;
-
 // TasksManager function
 function TasksManager(metadata)
 {	
-	this.file = "/sys/class/drm/card0/device/power_profile";
-
-	let locales = metadata.path + "/locale";
-	Gettext.bindtextdomain('radeonpowerprofilemanager', locales);
+	//Stub file in use:
+    //this.file = "/sys/class/drm/card0/device/power_profile";
+    this.file = metadata.path + "/stubs/power_profile";
 
 	this._init();
 }
@@ -57,31 +53,15 @@ TasksManager.prototype =
 		if (GLib.file_test(this.file, GLib.FileTest.EXISTS))
 		{
 			let content = Shell.get_file_contents_utf8_sync(this.file);
-			
-			let lines = content.toString().split('\n');
-			let tasks = 0;
-			
-			for (let i=0; i<lines.length; i++)
-			{
-				// if not a comment && not empty
-				if (lines[i][0] != '#' && lines[i] != '' && lines[i] != '\n')
-				{
-					let item = new PopupMenu.PopupMenuItem(_(lines[i]));
-					let textClicked = lines[i];
-					item.connect('activate', function(){
-						buttonText.set_text(_("(...)"));
-						removeTask(textClicked,varFile);
-					});
-					tasksMenu.addMenuItem(item);
+
+            let message = "Current power profile: " + content;
+			let item = new PopupMenu.PopupMenuItem(_(message));
+			tasksMenu.addMenuItem(item);
 					
-					tasks += 1;
-				}
-			}
-			buttonText.set_text("(" + tasks + ")");
-			if (tasks < 10) buttonText.get_parent().add_style_class_name("panelButtonWidth");
-			else buttonText.get_parent().remove_style_class_name("panelButtonWidth");
+                //TODO: Change text to icon.
+			buttonText.set_text("(RPPM)");
 		}
-		else { global.logError("Todo list : Error while reading file : " + varFile); }
+		else { global.logError("Radeon power profile manager : Error while reading file : " + varFile); }
 		
 		// Separator
 		this.Separator = new PopupMenu.PopupSeparatorMenuItem();
@@ -90,6 +70,7 @@ TasksManager.prototype =
 		// Bottom section
 		let bottomSection = new PopupMenu.PopupMenuSection();
 		
+        //savepoint
 		this.newTask = new St.Entry(
 		{
 			name: "newTaskEntry",
@@ -105,7 +86,7 @@ TasksManager.prototype =
 		    	{
 				tasksMenu.close();
 				buttonText.set_text(_("(...)"));
-				addTask(o.get_text(),varFile);
+				changeProfile(o.get_text(),varFile);
 		    		entryNewTask.set_text('');
 			}
 		});
@@ -168,20 +149,21 @@ function removeTask(text,file)
 	{ global.logError("Todo list : Error while reading file : " + file); }
 }
 
-// Add task "text" to file "file"
-function addTask(text,file)
+// Change power profile "text" in sysfs file "file"
+function changeProfile(text,file)
 {
 	if (GLib.file_test(file, GLib.FileTest.EXISTS))
 	{
 		let content = Shell.get_file_contents_utf8_sync(file);
-		content = content + text + "\n";
+		//content = content + text + "\n";
+        content = text
 		
 		let f = Gio.file_new_for_path(file);
 		let out = f.replace(null, false, Gio.FileCreateFlags.NONE, null);
 		Shell.write_string_to_stream (out, content);
 	}
 	else 
-	{ global.logError("Todo list : Error while reading file : " + file); }
+	{ global.logError("Radeon power profile manager : Error while reading file : " + file); }
 }
 
 // Init function
