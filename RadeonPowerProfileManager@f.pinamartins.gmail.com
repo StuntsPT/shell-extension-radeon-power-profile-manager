@@ -1,1 +1,0 @@
-/home/francisco/.local/share/gnome-shell/extensions/RadeonPowerProfileManager@f.pinamartins.gmail.com
