@@ -15,9 +15,10 @@ const Shell = imports.gi.Shell;
 // ProfileManager function
 function ProfileManager(metadata)
 {	
-	//Stub file in use:
-    //this.file = "/sys/class/drm/card0/device/power_profile";
-    this.file = metadata.path + "/stubs/power_profile";
+	//Stub file for testing:
+    //this.file = metadata.path + "/stubs/power_profile";
+    
+    this.file = "/sys/class/drm/card0/device/power_profile";
 
 	this._init();
 }
