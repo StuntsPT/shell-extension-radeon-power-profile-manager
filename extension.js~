@@ -8,12 +8,13 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Main = imports.ui.main;
 const Lang = imports.lang;
+const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
 
-// ProfileManager function
-function ProfileManager(metadata)
+// TasksManager function
+function TasksManager(metadata)
 {	
 	//Stub file in use:
     //this.file = "/sys/class/drm/card0/device/power_profile";
@@ -23,7 +24,7 @@ function ProfileManager(metadata)
 }
 
 // Prototype
-ProfileManager.prototype =
+TasksManager.prototype =
 {
 	__proto__: PanelMenu.Button.prototype,
 	
@@ -44,11 +45,8 @@ ProfileManager.prototype =
 		let varFile = this.file;
 		let tasksMenu = this.menu;
 		let buttonText = this.buttonText;
-        
-        // Clear
-        tasksMenu.removeAll();
-    	
-        // Sync
+
+    		// Sync
 		if (GLib.file_test(this.file, GLib.FileTest.EXISTS))
 		{
 			let content = Shell.get_file_contents_utf8_sync(this.file);
@@ -83,13 +81,32 @@ ProfileManager.prototype =
             changeProfile("low",varFile);
         });
             
-        midpowerbutton.connect('activate',function(){
-            changeProfile("mid",varFile);
-        });
-        
-        highpowerbutton.connect('activate',function(){
-            changeProfile("high",varFile);
-        });
+		//this.newTask = new St.Entry(
+		//{
+			//name: "newTaskEntry",
+			//hint_text: _("New task..."),
+			//track_hover: true,
+			//can_focus: true
+		//});
+		//let entryNewTask = this.newTask.clutter_text;
+		//entryNewTask.connect('key-press-event', function(o,e)
+		//{
+			//let symbol = e.get_key_symbol();
+		    	//if (symbol == Clutter.Return)
+		    	//{
+				//tasksMenu.close();
+				//buttonText.set_text(_("(...)"));
+				//changeProfile(o.get_text(),varFile);
+		    		//entryNewTask.set_text('');
+			//}
+		//});
+		
+		//bottomSection.actor.add_actor(this.newTask);
+		//bottomSection.actor.add_style_class_name("newTaskSection");
+		//tasksMenu.addMenuItem(bottomSection);
+		/* tasksMenu.connect('open-state-changed', Lang.bind(this, function(menu, isOpen) {
+			if (isOpen) {this.newTask.grab_key_focus();}
+		}));*/ 
 	},
 	
 	enable: function()
@@ -113,6 +130,34 @@ ProfileManager.prototype =
 	}
 }
 
+// Remove task "text" from file "file"
+function removeTask(text,file)
+{
+	if (GLib.file_test(file, GLib.FileTest.EXISTS))
+	{
+		let content = Shell.get_file_contents_utf8_sync(file);
+		let tasks = content.toString().split('\n');
+		let newText = "#tasks";
+		
+		for (let i=0; i<tasks.length; i++)
+		{
+			// if not corresponding
+			if (tasks[i] != text)
+			{
+				if(tasks[i][0] != '#')
+				{
+					newText += "\n";
+					newText += tasks[i];
+				}
+			}
+		}
+		let f = Gio.file_new_for_path(file);
+		let out = f.replace(null, false, Gio.FileCreateFlags.NONE, null);
+		Shell.write_string_to_stream (out, newText);
+	}
+	else 
+	{ global.logError("Todo list : Error while reading file : " + file); }
+}
 
 // Change power profile "text" in sysfs file "file"
 function changeProfile(text,file)
@@ -120,6 +165,7 @@ function changeProfile(text,file)
 	if (GLib.file_test(file, GLib.FileTest.EXISTS))
 	{
 		let content = Shell.get_file_contents_utf8_sync(file);
+		//content = content + text + "\n";
         content = text
 		
 		let f = Gio.file_new_for_path(file);
@@ -133,6 +179,6 @@ function changeProfile(text,file)
 // Init function
 function init(metadata) 
 {		
-	return new ProfileManager(metadata);
+	return new TasksManager(metadata);
 }
 
