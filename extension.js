@@ -12,6 +12,15 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
 
+//let LowPowerIcon = 'go-bottom-symbolic';
+//let MidPowerIcon = 'mail-send-recieve-symbolic';
+//let HighPowerIcon = 'go-top-symbolic';
+
+var image = new Clutter.Texture({
+keep_aspect_ratio: true,
+filename: extensionMeta.path + “/myimage.png”});
+Main.panel.button.set_child(image);
+
 // ProfileManager function
 function ProfileManager(metadata)
 {	
@@ -20,7 +29,11 @@ function ProfileManager(metadata)
     
     this.file = "/sys/class/drm/card0/device/power_profile";
 
-	this._init();
+    this.LowPowerIcon = metadata.path + '/low.svg';
+    this.MidPowerIcon = metadata.path + '/mid.svg';
+    this.HighPowerIcon = metadata.path + '/high.svg';
+
+    this._init();
 }
 
 // Prototype
@@ -32,20 +45,26 @@ ProfileManager.prototype =
     	{			
 		PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
-		this.buttonText = new St.Label({text:_("(...)")});
-		this.buttonText.set_style("text-align:center;");
-		this.actor.add_actor(this.buttonText);
-		this.buttonText.get_parent().add_style_class_name("panelButtonWidth");
-			
+        this.temp = new St.Icon({
+            icon_name:    this.HighPowerIcon,
+            icon_type:    St.IconType.SYMBOLIC,
+            style_class:  'system-status-icon'
+        });
+        
+        this.actor.add_actor(this.temp);
+        this.actor.add_style_class_name('panel-status-button');
+        this.actor.has_tooltip = false;
+
 		this._refresh();
-	},
+        },
 	
 	_refresh: function()
 	{    		
 		let varFile = this.file;
 		let tasksMenu = this.menu;
-		let buttonText = this.buttonText;
-        
+      
+        let temp = this.temp;
+
         // Clear
         tasksMenu.removeAll();
     	
@@ -54,13 +73,23 @@ ProfileManager.prototype =
 		{
 			let content = Shell.get_file_contents_utf8_sync(this.file);
 
-            //TODO: Change message to plain english
-            let message = "Current power profile: " + content;
+            //let message = "Current power profile: " + content.trim();
+            let message = this.HighPowerIcon;
 			let item = new PopupMenu.PopupMenuItem(_(message));
 			tasksMenu.addMenuItem(item);
 					
-                //TODO: Change text to icon.
-			buttonText.set_text("(RPPM)");
+            if (content.trim() == "low")
+            {
+                temp.icon_name = this.LowPowerIcon;
+            }
+            else if (content.trim() == "mid")
+            {
+                temp.icon = this.MidPowerIcon;
+            }
+            else
+            {
+                temp.icon = this.HighPowerIcon;
+            }
 		}
 		else { global.logError("Radeon power profile manager : Error while reading file : " + varFile); }
 		
