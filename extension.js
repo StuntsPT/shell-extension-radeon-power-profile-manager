@@ -12,14 +12,16 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
 
+const Clutter = imports.gi.Clutter
+
 //let LowPowerIcon = 'go-bottom-symbolic';
 //let MidPowerIcon = 'mail-send-recieve-symbolic';
 //let HighPowerIcon = 'go-top-symbolic';
 
-var image = new Clutter.Texture({
-keep_aspect_ratio: true,
-filename: extensionMeta.path + “/myimage.png”});
-Main.panel.button.set_child(image);
+//var image = new Clutter.Texture({
+//keep_aspect_ratio: true,
+//filename: extensionMeta.path + "/low.png"});
+//Main.panel.button.set_child(image);
 
 // ProfileManager function
 function ProfileManager(metadata)
@@ -29,9 +31,13 @@ function ProfileManager(metadata)
     
     this.file = "/sys/class/drm/card0/device/power_profile";
 
-    this.LowPowerIcon = metadata.path + '/low.svg';
-    this.MidPowerIcon = metadata.path + '/mid.svg';
-    this.HighPowerIcon = metadata.path + '/high.svg';
+    this.LowPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/low.svg");
+    this.MidPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/mid.svg");
+    this.HighPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/high.svg");
+
+    //this.LowPowerIcon = metadata.path + '/low.svg';
+    //this.MidPowerIcon = metadata.path + '/mid.svg';
+    //this.HighPowerIcon = metadata.path + '/high.svg';
 
     this._init();
 }
@@ -45,12 +51,14 @@ ProfileManager.prototype =
     	{			
 		PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
-        this.temp = new St.Icon({
-            icon_name:    this.HighPowerIcon,
-            icon_type:    St.IconType.SYMBOLIC,
-            style_class:  'system-status-icon'
-        });
-        
+        //this.temp = new St.Icon({
+            //icon_name:    this.HighPowerIcon,
+            //icon_type:    St.IconType.SYMBOLIC,
+            //style_class:  'system-status-icon'
+        //});
+        this.temp = new St.BoxLayout();
+        this.temp.add_actor(this.LowPowerIcon,1);
+
         this.actor.add_actor(this.temp);
         this.actor.add_style_class_name('panel-status-button');
         this.actor.has_tooltip = false;
@@ -73,22 +81,21 @@ ProfileManager.prototype =
 		{
 			let content = Shell.get_file_contents_utf8_sync(this.file);
 
-            //let message = "Current power profile: " + content.trim();
-            let message = this.HighPowerIcon;
+            let message = "Current power profile: " + content.trim();
 			let item = new PopupMenu.PopupMenuItem(_(message));
 			tasksMenu.addMenuItem(item);
 					
             if (content.trim() == "low")
             {
-                temp.icon_name = this.LowPowerIcon;
+                temp.add_actor(this.LowPowerIcon,1);
             }
             else if (content.trim() == "mid")
             {
-                temp.icon = this.MidPowerIcon;
+                temp.add_actor(this.MidPowerIcon,1);
             }
             else
             {
-                temp.icon = this.HighPowerIcon;
+                temp.add_actor(this.HighPowerIcon,1);
             }
 		}
 		else { global.logError("Radeon power profile manager : Error while reading file : " + varFile); }
