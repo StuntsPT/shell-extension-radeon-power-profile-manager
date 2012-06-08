@@ -18,14 +18,13 @@ const Clutter = imports.gi.Clutter
 function ProfileManager(metadata)
 {
     //Stub file for testing:
-    this.file = metadata.path + "/stubs/power_profile";
+    //this.file = metadata.path + "/stubs/power_profile";
 
-    //this.file = "/sys/class/drm/card0/device/power_profile";
+    this.file = "/sys/class/drm/card0/device/power_profile";
 
     this.LowPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/low.svg");
     this.MidPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/mid.svg");
     this.HighPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/high.svg");
-    this.NoPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/none.svg");
 
     this._init();
 }
@@ -164,4 +163,3 @@ function init(metadata)
 {
 	return new ProfileManager(metadata);
 }
-
