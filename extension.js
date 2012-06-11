@@ -39,8 +39,8 @@ ProfileManager.prototype =
 	    PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
 	    this.temp = new St.BoxLayout();
-	    this.temp.set_width(16)
-	    this.temp.set_height(18)
+	    this.temp.set_width(24)
+	    this.temp.set_height(24)
 
 	    this.actor.add_actor(this.temp);
 	    this.actor.add_style_class_name('panel-status-button');
