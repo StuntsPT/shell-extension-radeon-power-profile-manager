@@ -6,12 +6,14 @@ Gnome-shell-extension-Radeon-Power-Profile-Manager
 Since the "dynpm" mode does not work correctly for many Radeons, it is useful to have an alternative that you can control manually.
 This extension is exactly for that and it is in my opinion a more elegant solution than using shell scripts.
 It still needs some work to make it look better, but for now it basically does the job.
+This extension supports setups with multiple cards, just make sure that you apply the usage instructions to both "card0" and "card1".
 
 ##Usage instructions:
 
 To use this extension you need:
 * A Radeon card that supports power profiles - r1xx and up (needs confirmation, not sure about Northen and Southern Islands hardware);
 * To be running the open source drivers;
+* Make sure that */sys/class/drm/card0/device/power_method* is set to *profile*;
 * Last but not least, set the permissions of */sys/class/drm/card0/device/power_profile* to be writable by your user (by default only root can change these values);
     * *chmod a+w /sys/class/drm/card0/device/power_profile* will work, but feel free to use any other method (polkit, etc...);
     * to make the changes permanent don't forget to add the *chmod* line to your rc.local or equivalent in your distro;
