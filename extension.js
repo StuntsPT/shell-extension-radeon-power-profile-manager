@@ -17,10 +17,36 @@ const Clutter = imports.gi.Clutter
 // ProfileManager function
 function ProfileManager(metadata)
 {
-    //Stub file for testing:
+    //Stub files for testing:
     //this.file = metadata.path + "/stubs/power_profile";
+    //this.powerMethod = metadata.path + "/stubs/power_method";
+    //this.second_card = metadata.path + "/stubs/power_profile2";
+    //this.powerMethod2 = metadata.path + "/stubs/power_method";
 
     this.file = "/sys/class/drm/card0/device/power_profile";
+    this.powerMethod = "/sys/class/drm/card0/device/power_method"
+    this.second_card = "/sys/class/drm/card1/device/power_profile"
+    this.powerMethod2 = "/sys/class/drm/card1/device/power_method"
+
+    //Test if the power_method file is set for profile:
+    if (CheckForFile(this.powerMethod) == 1)
+    {
+	CheckMethod(this.powerMethod);
+    }
+
+    //Test if a second card is present and if it is, define it:
+    if (CheckForFile(this.second_card) == 1)
+    {
+	if (CheckForFile(this.powerMethod2) == 1)
+	{
+	    CheckMethod(this.powerMethod2);
+	}
+    }
+    else
+    {
+	global.logError("Radeon Power Profile Manager: Second card not present, working with single card.");
+	this.second_card = 0;
+    }
 
     this.LowPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/low.svg");
     this.MidPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/mid.svg");
@@ -39,8 +65,8 @@ ProfileManager.prototype =
 	    PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
 	    this.temp = new St.BoxLayout();
-	    this.temp.set_width(24)
-	    this.temp.set_height(24)
+	    this.temp.set_width(24);
+	    this.temp.set_height(24);
 
 	    this.actor.add_actor(this.temp);
 	    this.actor.add_style_class_name('panel-status-button');
@@ -53,6 +79,7 @@ ProfileManager.prototype =
 	_refresh: function()
 	{
 	    let varFile = this.file;
+	    let card2 = this.second_card;
 	    let tasksMenu = this.menu;
 
 	    let temp = this.temp;
@@ -61,7 +88,7 @@ ProfileManager.prototype =
 	    tasksMenu.removeAll();
 
 	    // Sync
-	    if (GLib.file_test(this.file, GLib.FileTest.EXISTS))
+	    if (CheckForFile(this.file) == 1)
 	    {
 		let content = Shell.get_file_contents_utf8_sync(this.file);
 
@@ -83,7 +110,6 @@ ProfileManager.prototype =
 		}
 		temp.add_actor(Icon,1);
 	    }
-	    else { global.logError("Radeon power profile manager : Error while reading file : " + varFile); }
 
 	    // Separator
 	    this.Separator = new PopupMenu.PopupSeparatorMenuItem();
@@ -105,18 +131,21 @@ ProfileManager.prototype =
 	    {
 		temp.remove_actor(Icon);
 		changeProfile("low",varFile);
+		if (card2 != 0)	{changeProfile("low",card2);}
 	    });
 
 	    midpowerbutton.connect('activate',function()
 	    {
 		temp.remove_actor(Icon);
 		changeProfile("mid",varFile);
+		if (card2 != 0)	{changeProfile("mid",card2);}
 	    });
 
 	    highpowerbutton.connect('activate',function()
 	    {
 		temp.remove_actor(Icon);
 		changeProfile("high",varFile);
+		if (card2 != 0)	{changeProfile("high",card2);}
 	    });
 	},
 
@@ -143,7 +172,7 @@ ProfileManager.prototype =
 // Change power profile "text" in sysfs file "file"
 function changeProfile(text,file)
 {
-    if (GLib.file_test(file, GLib.FileTest.EXISTS))
+    if (CheckForFile(file) == 1)
     {
 	let content = Shell.get_file_contents_utf8_sync(file);
         content = text
@@ -152,9 +181,28 @@ function changeProfile(text,file)
 	let out = f.replace(null, false, Gio.FileCreateFlags.NONE, null);
 	Shell.write_string_to_stream (out, content);
     }
-    else
+}
+
+function CheckForFile(filename)
+{
+    if (GLib.file_test(filename, GLib.FileTest.EXISTS))
     {
-	global.logError("Radeon power profile manager : Error while reading file : " + file);
+	return 1;
+    }
+    else if (filename.indexOf("/card1/") != -1)
+    {
+	global.logError("Radeon Power Profile Manager: Error while reading file : " + filename);
+	return 0;
+    }
+}
+
+function CheckMethod(filename)
+{
+    //Will check if the current power_method is set to 'profile'
+    method = Shell.get_file_contents_utf8_sync(filename);
+    if (method.trim() != "profile")
+    {
+	global.logError("Radeon Power Profile Manager: " + filename + " is not set for 'profile'. Please change this.");
     }
 }
 
