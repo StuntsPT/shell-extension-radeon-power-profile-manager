@@ -23,4 +23,4 @@ To use this extension you need:
 The code for this extension was written using gnome-shell-extension-tool and most of the code was based on the "simple todo list" from bsaleil (https://github.com/bsaleil/todolist-gnome-shell-extension). Big thanks to you!
 
 ##License:
-This software is licensed under the GPLv3.
+This software is licensed under the GPLv2.
