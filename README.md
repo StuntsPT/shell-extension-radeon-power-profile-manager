@@ -21,6 +21,7 @@ To use this extension you need:
 ##Credits:
 
 The code for this extension was written using gnome-shell-extension-tool and most of the code was based on the "simple todo list" from bsaleil (https://github.com/bsaleil/todolist-gnome-shell-extension). Big thanks to you!
+The icons were created by Todd-partridge (https://github.com/Gen2ly) and slightly modified by myself.
 
 ##License:
 This software is licensed under the GPLv2.
