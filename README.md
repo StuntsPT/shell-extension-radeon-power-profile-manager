@@ -16,7 +16,7 @@ To use this extension you need:
 * Make sure that */sys/class/drm/card0/device/power_method* is set to *profile*;
 * Last but not least, set the permissions of */sys/class/drm/card0/device/power_profile* to be writable by your user (by default only root can change these values);
     * *chmod a+w /sys/class/drm/card0/device/power_profile* will work, but feel free to use any other method (polkit, etc...);
-    * to make the changes permanent don't forget to add the *chmod* line to your rc.local or equivalent in your distro;
+    * to make the changes permanent don't forget to add the *chmod* line to your rc.local or equivalent in your distro (If your */etc/rc.local* contains an *exit 0* line, then the *chmod* line has to be placed **before** it);
 
 ##Credits:
 
