@@ -191,12 +191,21 @@ function changeProfile(text,file)
 {
     if (CheckForFile(file) == 1)
     {
-	let content = Shell.get_file_contents_utf8_sync(file);
-        content = text
+	if (GLib.access(file, 2) == 0)
+	{
+	    let content = Shell.get_file_contents_utf8_sync(file);
+	    content = text
 
-	let f = Gio.file_new_for_path(file);
-	let out = f.replace(null, false, Gio.FileCreateFlags.NONE, null);
-	Shell.write_string_to_stream (out, content);
+	    let f = Gio.file_new_for_path(file);
+	    let out = f.replace(null, false, Gio.FileCreateFlags.NONE, null);
+	    Shell.write_string_to_stream (out, content);
+	}
+	else
+	{
+	    let [success, argv] = GLib.shell_parse_argv(_("pkexec /bin/sh -c " + "\"" + " echo " + text + " > " + file + "\""));
+	    GLib.spawn_async_with_pipes(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, 
+					    null, null);
+	}
     }
 }
 
