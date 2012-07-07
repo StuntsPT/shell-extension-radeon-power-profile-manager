@@ -35,36 +35,38 @@ const Clutter = imports.gi.Clutter
 function ProfileManager(metadata)
 {
     //Stub files for testing:
-    //this.file = metadata.path + "/stubs/power_profile";
+    //this.profile0 = metadata.path + "/stubs/power_profile";
     //this.powerMethod = metadata.path + "/stubs/power_method";
-    //this.second_card = metadata.path + "/stubs/power_profile2";
+    //this.profile1 = metadata.path + "/stubs/power_profile2";
     //this.powerMethod2 = metadata.path + "/stubs/power_method";
 
-    this.file = "/sys/class/drm/card0/device/power_profile";
-    this.powerMethod = "/sys/class/drm/card0/device/power_method"
-    this.second_card = "/sys/class/drm/card1/device/power_profile"
-    this.powerMethod2 = "/sys/class/drm/card1/device/power_method"
+    //Define variables for the sysfs files:
+    this.profile0 = "/sys/class/drm/card0/device/power_profile";
+    this.powerMethod0 = "/sys/class/drm/card0/device/power_method"
+    this.profile1 = "/sys/class/drm/card1/device/power_profile"
+    this.powerMethod1 = "/sys/class/drm/card1/device/power_method"
 
     //Test if the power_method file is set for profile:
-    if (CheckForFile(this.powerMethod) == 1)
+    if (CheckForFile(this.powerMethod0) == 1)
     {
-	CheckMethod(this.powerMethod);
+	CheckMethod(this.powerMethod0);
     }
 
     //Test if a second card is present and if it is, define it:
-    if (CheckForFile(this.second_card) == 1)
+    if (CheckForFile(this.profile1) == 1)
     {
-	if (CheckForFile(this.powerMethod2) == 1)
+	if (CheckForFile(this.powerMethod1) == 1)
 	{
-	    CheckMethod(this.powerMethod2);
+	    CheckMethod(this.powerMethod1);
 	}
     }
     else
     {
 	global.logError("Radeon Power Profile Manager: Second card not present, working with single card.");
-	this.second_card = 0;
+	this.profile1 = 0;
     }
 
+    //Set the icons:
     this.LowPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/low.svg");
     this.MidPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/mid.svg");
     this.HighPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/high.svg");
@@ -95,8 +97,8 @@ ProfileManager.prototype =
 
 	_refresh: function()
 	{
-	    let varFile = this.file;
-	    let card2 = this.second_card;
+	    let varfile1 = this.profile0;
+	    let varfile2 = this.profile1;
 	    let tasksMenu = this.menu;
 
 	    let temp = this.temp;
@@ -105,9 +107,9 @@ ProfileManager.prototype =
 	    tasksMenu.removeAll();
 
 	    // Sync
-	    if (CheckForFile(this.file) == 1)
+	    if (CheckForFile(this.profile0) == 1)
 	    {
-		let content = Shell.get_file_contents_utf8_sync(this.file);
+		let content = Shell.get_file_contents_utf8_sync(this.profile0);
 
 		let message = "Currently on '" + content.trim() + "' profile";
 		let item = new PopupMenu.PopupMenuItem(_(message));
@@ -147,22 +149,22 @@ ProfileManager.prototype =
 	    lowpowerbutton.connect('activate',function()
 	    {
 		temp.remove_actor(Icon);
-		changeProfile("low",varFile);
-		if (card2 != 0)	{changeProfile("low",card2);}
+		changeProfile("low",varfile1);
+		if (varfile2 != 0)	{changeProfile("low",varfile2);}
 	    });
 
 	    midpowerbutton.connect('activate',function()
 	    {
 		temp.remove_actor(Icon);
-		changeProfile("mid",varFile);
-		if (card2 != 0)	{changeProfile("mid",card2);}
+		changeProfile("mid",varfile1);
+		if (varfile2 != 0)	{changeProfile("mid",varfile2);}
 	    });
 
 	    highpowerbutton.connect('activate',function()
 	    {
 		temp.remove_actor(Icon);
-		changeProfile("high",varFile);
-		if (card2 != 0)	{changeProfile("high",card2);}
+		changeProfile("high",varfile1);
+		if (varfile2 != 0)	{changeProfile("high",varfile2);}
 	    });
 	},
 
@@ -172,7 +174,7 @@ ProfileManager.prototype =
 	    Main.panel._menus.addMenu(this.menu);
 
 	    // Refresh menu
-	    let fileM = Gio.file_new_for_path(this.file);
+	    let fileM = Gio.file_new_for_path(this.profile0);
 	    this.monitor = fileM.monitor(Gio.FileMonitorFlags.NONE, null);
 	    this.monitor.connect('changed', Lang.bind(this, this._refresh));
 	},
@@ -215,7 +217,7 @@ function CheckForFile(filename)
     {
 	return 1;
     }
-    else if (filename.indexOf("/card1/") != -1)
+    else if (filename.indexOf("/card1/") == -1)
     {
 	global.logError("Radeon Power Profile Manager: Error while reading file : " + filename);
 	return 0;
