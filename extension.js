@@ -188,7 +188,9 @@ ProfileManager.prototype =
 }
 
 
-// Change power profile "text" in sysfs file "file"
+//Change power profile "text" in sysfs file "file". Will use polkit to
+//elevate privileges if the user does not have write access to the
+//required sysfs file.
 function changeProfile(text,file)
 {
     if (CheckForFile(file) == 1)
@@ -213,6 +215,7 @@ function changeProfile(text,file)
 
 function CheckForFile(filename)
 {
+    //Checks for the existance of a file
     if (GLib.file_test(filename, GLib.FileTest.EXISTS))
     {
 	return 1;
