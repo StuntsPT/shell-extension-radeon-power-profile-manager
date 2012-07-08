@@ -51,6 +51,10 @@ function ProfileManager(metadata)
     {
 	CheckMethod(this.powerMethod0);
     }
+    else
+    {
+	global.logError("Radeon Power Profile Manager: Error while reading file : " + filename);
+    }
 
     //Test if a second card is present and if it is, define it:
     if (CheckForFile(this.profile1) == 1)
@@ -62,7 +66,7 @@ function ProfileManager(metadata)
     }
     else
     {
-	global.logError("Radeon Power Profile Manager: Second card not present, working with single card.");
+	global.logError("Radeon Power Profile Manager: Second card not found, working with single card.");
 	this.profile1 = 0;
     }
 
@@ -220,9 +224,8 @@ function CheckForFile(filename)
     {
 	return 1;
     }
-    else if (filename.indexOf("/card1/") == -1)
+    else
     {
-	global.logError("Radeon Power Profile Manager: Error while reading file : " + filename);
 	return 0;
     }
 }
