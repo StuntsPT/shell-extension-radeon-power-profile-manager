@@ -31,6 +31,9 @@ const Shell = imports.gi.Shell;
 
 const Clutter = imports.gi.Clutter
 
+let meta;
+let profilemanager;
+
 // ProfileManager function
 function ProfileManager(metadata)
 {
@@ -49,25 +52,25 @@ function ProfileManager(metadata)
     //Test if the power_method file is set for profile:
     if (CheckForFile(this.powerMethod0) == 1)
     {
-	CheckMethod(this.powerMethod0);
+        CheckMethod(this.powerMethod0);
     }
     else
     {
-	global.logError("Radeon Power Profile Manager: Error while reading file : " + filename);
+        global.logError("Radeon Power Profile Manager: Error while reading file : " + filename);
     }
 
     //Test if a second card is present and if it is, define it:
     if (CheckForFile(this.profile1) == 1)
     {
-	if (CheckForFile(this.powerMethod1) == 1)
-	{
-	    CheckMethod(this.powerMethod1);
-	}
+        if (CheckForFile(this.powerMethod1) == 1)
+        {
+            CheckMethod(this.powerMethod1);
+        }
     }
     else
     {
-	global.logError("Radeon Power Profile Manager: Second card not found, working with single card.");
-	this.profile1 = 0;
+        global.logError("Radeon Power Profile Manager: Second card not found, working with single card.");
+        this.profile1 = 0;
     }
 
     //Set the icons:
@@ -81,114 +84,109 @@ function ProfileManager(metadata)
 // Prototype
 ProfileManager.prototype =
 {
-	__proto__: PanelMenu.Button.prototype,
+        __proto__: PanelMenu.Button.prototype,
 
-    	_init: function()
-    	{
-	    PanelMenu.Button.prototype._init.call(this, St.Align.START);
+        _init: function()
+        {
+            PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
-	    this.temp = new St.BoxLayout();
-	    this.temp.set_width(24);
-	    this.temp.set_height(24);
+            this.temp = new St.BoxLayout();
+            this.temp.set_width(24);
+            this.temp.set_height(24);
 
-	    this.actor.add_actor(this.temp);
-	    this.actor.add_style_class_name('panel-status-button');
-	    this.actor.has_tooltip = false;
+            this.actor.add_actor(this.temp);
+            this.actor.add_style_class_name('panel-status-button');
+            this.actor.has_tooltip = false;
 
-	    this._refresh();
+            this._refresh();
 
         },
 
-	_refresh: function()
-	{
-	    let varfile1 = this.profile0;
-	    let varfile2 = this.profile1;
-	    let tasksMenu = this.menu;
+        _refresh: function()
+        {
+            let varfile1 = this.profile0;
+            let varfile2 = this.profile1;
+            let tasksMenu = this.menu;
 
-	    let temp = this.temp;
+            let temp = this.temp;
 
-	    // Clear
-	    tasksMenu.removeAll();
+            // Clear
+            tasksMenu.removeAll();
 
-	    // Sync
-	    if (CheckForFile(this.profile0) == 1)
-	    {
-		let content = Shell.get_file_contents_utf8_sync(this.profile0);
+            // Sync
+            if (CheckForFile(this.profile0) == 1)
+            {
+                let content = Shell.get_file_contents_utf8_sync(this.profile0);
 
-		let message = "Currently on '" + content.trim() + "' profile";
-		let item = new PopupMenu.PopupMenuItem(_(message));
-		tasksMenu.addMenuItem(item);
+                let message = "Currently on '" + content.trim() + "' profile";
+                let item = new PopupMenu.PopupMenuItem(_(message));
+                tasksMenu.addMenuItem(item);
 
-		if (content.trim() == "low")
-		{
-		    Icon = this.LowPowerIcon;
-		}
-		else if (content.trim() == "mid")
-		{
-		    Icon = this.MidPowerIcon;
-		}
-		else
-		{
-		    Icon = this.HighPowerIcon;
-		}
-		temp.add_actor(Icon,1);
-	    }
+                if (content.trim() == "low")
+                {
+                    Icon = this.LowPowerIcon;
+                }
+                else if (content.trim() == "mid")
+                {
+                    Icon = this.MidPowerIcon;
+                }
+                else
+                {
+                    Icon = this.HighPowerIcon;
+                }
+                temp.add_actor(Icon,1);
+            }
 
-	    // Separator
-	    this.Separator = new PopupMenu.PopupSeparatorMenuItem();
-	    tasksMenu.addMenuItem(this.Separator);
+            // Separator
+            this.Separator = new PopupMenu.PopupSeparatorMenuItem();
+            tasksMenu.addMenuItem(this.Separator);
 
-	    // Bottom section
-	    let bottomSection = new PopupMenu.PopupMenuSection();
+            // Bottom section
+            let bottomSection = new PopupMenu.PopupMenuSection();
 
-	    //Create power profile changing buttons:
-	    let lowpowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'low'"));
-	    tasksMenu.addMenuItem(lowpowerbutton);
-	    let midpowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'mid'"));
-	    tasksMenu.addMenuItem(midpowerbutton);
-	    let highpowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'high'"));
-	    tasksMenu.addMenuItem(highpowerbutton);
+            //Create power profile changing buttons:
+            let lowpowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'low'"));
+            tasksMenu.addMenuItem(lowpowerbutton);
+            let midpowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'mid'"));
+            tasksMenu.addMenuItem(midpowerbutton);
+            let highpowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'high'"));
+            tasksMenu.addMenuItem(highpowerbutton);
 
-	    //Give the buttons an action:
-	    lowpowerbutton.connect('activate',function()
-	    {
-		temp.remove_actor(Icon);
-		changeProfile("low",varfile1);
-		if (varfile2 != 0)	{changeProfile("low",varfile2);}
-	    });
+            //Give the buttons an action:
+            lowpowerbutton.connect('activate',function()
+            {
+                temp.remove_actor(Icon);
+                changeProfile("low",varfile1);
+                if (varfile2 != 0)      {changeProfile("low",varfile2);}
+            });
 
-	    midpowerbutton.connect('activate',function()
-	    {
-		temp.remove_actor(Icon);
-		changeProfile("mid",varfile1);
-		if (varfile2 != 0)	{changeProfile("mid",varfile2);}
-	    });
+            midpowerbutton.connect('activate',function()
+            {
+                temp.remove_actor(Icon);
+                changeProfile("mid",varfile1);
+                if (varfile2 != 0)      {changeProfile("mid",varfile2);}
+            });
 
-	    highpowerbutton.connect('activate',function()
-	    {
-		temp.remove_actor(Icon);
-		changeProfile("high",varfile1);
-		if (varfile2 != 0)	{changeProfile("high",varfile2);}
-	    });
-	},
+            highpowerbutton.connect('activate',function()
+            {
+                temp.remove_actor(Icon);
+                changeProfile("high",varfile1);
+                if (varfile2 != 0)      {changeProfile("high",varfile2);}
+            });
+        },
 
-	enable: function()
-	{
-	    Main.panel._rightBox.insert_child_at_index(this.actor, 0);
-	    Main.panel._menus.addMenu(this.menu);
+        _enable: function()
+        {
+            // Refresh menu
+            let fileM = Gio.file_new_for_path(this.profile0);
+            this.monitor = fileM.monitor(Gio.FileMonitorFlags.NONE, null);
+            this.monitor.connect('changed', Lang.bind(this, this._refresh));
+        },
 
-	    // Refresh menu
-	    let fileM = Gio.file_new_for_path(this.profile0);
-	    this.monitor = fileM.monitor(Gio.FileMonitorFlags.NONE, null);
-	    this.monitor.connect('changed', Lang.bind(this, this._refresh));
-	},
-
-	disable: function()
-	{
-	    Main.panel._menus.removeMenu(this.menu);
-	    Main.panel._rightBox.remove_actor(this.actor);
-	    this.monitor.cancel();
-	}
+        _disable: function()
+        {
+            this.monitor.cancel();
+        }
 }
 
 
@@ -199,21 +197,21 @@ function changeProfile(text,file)
 {
     if (CheckForFile(file) == 1)
     {
-	if (GLib.access(file, 2) == 0)
-	{
-	    let content = Shell.get_file_contents_utf8_sync(file);
-	    content = text
+        if (GLib.access(file, 2) == 0)
+        {
+            let content = Shell.get_file_contents_utf8_sync(file);
+            content = text
 
-	    let f = Gio.file_new_for_path(file);
-	    let out = f.replace(null, false, Gio.FileCreateFlags.NONE, null);
-	    Shell.write_string_to_stream (out, content);
-	}
-	else
-	{
-	    let [success, argv] = GLib.shell_parse_argv(_("pkexec /bin/sh -c " + "\"" + " echo " + text + " > " + file + "\""));
-	    GLib.spawn_async_with_pipes(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, 
-					    null, null);
-	}
+            let f = Gio.file_new_for_path(file);
+            let out = f.replace(null, false, Gio.FileCreateFlags.NONE, null);
+            Shell.write_string_to_stream (out, content);
+        }
+        else
+        {
+            let [success, argv] = GLib.shell_parse_argv(_("pkexec /bin/sh -c " + "\"" + " echo " + text + " > " + file + "\""));
+            GLib.spawn_async_with_pipes(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                                            null, null);
+        }
     }
 }
 
@@ -222,11 +220,11 @@ function CheckForFile(filename)
     //Checks for the existance of a file
     if (GLib.file_test(filename, GLib.FileTest.EXISTS))
     {
-	return 1;
+        return 1;
     }
     else
     {
-	return 0;
+        return 0;
     }
 }
 
@@ -236,12 +234,26 @@ function CheckMethod(filename)
     method = Shell.get_file_contents_utf8_sync(filename);
     if (method.trim() != "profile")
     {
-	global.logError("Radeon Power Profile Manager: " + filename + " is not set for 'profile'. Please change this.");
+        global.logError("Radeon Power Profile Manager: " + filename + " is not set for 'profile'. Please change this.");
     }
 }
 
 // Init function
 function init(metadata)
 {
-	return new ProfileManager(metadata);
+        meta = metadata;
+}
+
+function enable()
+{
+    profilemanager = new ProfileManager(meta);
+    profilemanager._enable();
+    Main.panel.addToStatusArea('profilemanager', profilemanager);
+}
+
+function disable()
+{
+    profilemanager._disable();
+    profilemanager.destroy();
+    profilemanager = null;
 }
