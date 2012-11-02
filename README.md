@@ -1,6 +1,10 @@
 Gnome-shell-extension-Radeon-Power-Profile-Manager
 ==================================================
 
+## Importante notice:
+Not all power profiles work on all cards, and in some cases, some modes *might* even cause crashes. This is not frequent, and in case it happens to you, you should file a bug at freedesktop.org.
+This is just to alert you that YMMV when using this extension. You can read more about power profiles [here](http://www.x.org/wiki/RadeonFeature#KMS_Power_Management_Options "X.org documentation on Radeon power profiles").
+
 ##This small extension will allow you to change the power profile of your radeon card when using the open source drivers.
 
 Since the "dynpm" mode does not work correctly for many Radeons, it is useful to have an alternative that you can control manually.
