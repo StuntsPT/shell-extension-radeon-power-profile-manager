@@ -215,7 +215,7 @@ function changeProfile(text,file)
                     [result, pid] = GLib.spawn_async_with_pipes(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
                                             null, null);
                 } catch (e) {
-                    global.logError("Radeon Power Profile Manager: Failed to change profile with elevated privileges.");
+                    global.logError("Radeon Power Profile Manager: Failed to change profile with elevated privileges using polkit.");
                 }
             }
             return result;
