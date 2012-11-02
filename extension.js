@@ -33,6 +33,7 @@ const Clutter = imports.gi.Clutter
 
 let meta;
 let profilemanager;
+let Icon = "";
 
 // ProfileManager function
 function ProfileManager(metadata)
@@ -121,6 +122,7 @@ ProfileManager.prototype =
                 let message = "Currently on '" + content.trim() + "' profile";
                 let item = new PopupMenu.PopupMenuItem(_(message));
                 tasksMenu.addMenuItem(item);
+                if (Icon != "") {temp.remove_actor(Icon);}
 
                 if (content.trim() == "low")
                 {
@@ -155,21 +157,18 @@ ProfileManager.prototype =
             //Give the buttons an action:
             lowpowerbutton.connect('activate',function()
             {
-                temp.remove_actor(Icon);
                 changeProfile("low",varfile1);
                 if (varfile2 != 0)      {changeProfile("low",varfile2);}
             });
 
             midpowerbutton.connect('activate',function()
             {
-                temp.remove_actor(Icon);
                 changeProfile("mid",varfile1);
                 if (varfile2 != 0)      {changeProfile("mid",varfile2);}
             });
 
             highpowerbutton.connect('activate',function()
             {
-                temp.remove_actor(Icon);
                 changeProfile("high",varfile1);
                 if (varfile2 != 0)      {changeProfile("high",varfile2);}
             });
@@ -208,10 +207,19 @@ function changeProfile(text,file)
         }
         else
         {
-            let [success, argv] = GLib.shell_parse_argv(_("pkexec /bin/sh -c " + "\"" + " echo " + text + " > " + file + "\""));
-            GLib.spawn_async_with_pipes(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+            let [result, argv] = GLib.shell_parse_argv(_("pkexec /bin/bash -c \" echo '" + text + "' > " + file + "\""));
+
+            if (result)
+            {
+                try {
+                    [result, pid] = GLib.spawn_async_with_pipes(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
                                             null, null);
-        }
+                } catch (e) {
+                    global.logError("Radeon Power Profile Manager: Failed to change profile with elevated privileges.");
+                }
+            }
+            return result;
+          }
     }
 }
 
