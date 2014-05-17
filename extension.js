@@ -46,18 +46,16 @@ function ProfileManager(metadata)
 
     //Define variables for the sysfs files:
     this.profile0 = "/sys/class/drm/card0/device/power_profile";
-    this.powerMethod0 = "/sys/class/drm/card0/device/power_method"
-    this.profile1 = "/sys/class/drm/card1/device/power_profile"
-    this.powerMethod1 = "/sys/class/drm/card1/device/power_method"
+    this.powerMethod0 = "/sys/class/drm/card0/device/power_method";
+    this.profile1 = "/sys/class/drm/card1/device/power_profile";
+    this.powerMethod1 = "/sys/class/drm/card1/device/power_method";
+    this.foundCard = 0;
 
     //Test if the power_method file is set for profile:
     if (CheckForFile(this.powerMethod0) == 1)
     {
         CheckMethod(this.powerMethod0);
-    }
-    else
-    {
-        global.logError("Radeon Power Profile Manager: Error while reading file : " + filename);
+        this.foundCard = 1;
     }
 
     //Test if a second card is present and if it is, define it:
@@ -66,18 +64,20 @@ function ProfileManager(metadata)
         if (CheckForFile(this.powerMethod1) == 1)
         {
             CheckMethod(this.powerMethod1);
+            this.foundCard = 1;
         }
     }
-    else
+
+    if (this.foundCard != 1)
     {
-        global.logError("Radeon Power Profile Manager: Second card not found, working with single card.");
-        this.profile1 = 0;
+        global.logError("Radeon Power Profile Manager: No cards found!");
     }
 
     //Set the icons:
     this.LowPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/low.svg");
     this.MidPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/mid.svg");
     this.HighPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/high.svg");
+    this.AutoPowerIcon=Clutter.Texture.new_from_file(metadata.path+"/auto.svg");
 
     this._init();
 }
@@ -105,11 +105,12 @@ ProfileManager.prototype =
 
         _refresh: function()
         {
-            let varfile1 = this.profile0;
-            let varfile2 = this.profile1;
+			let varfile0 = this.profile0;
+            let varfile1 = this.profile1;
             let tasksMenu = this.menu;
 
             let temp = this.temp;
+            let content = 0;
 
             // Clear
             tasksMenu.removeAll();
@@ -117,27 +118,35 @@ ProfileManager.prototype =
             // Sync
             if (CheckForFile(this.profile0) == 1)
             {
-                let content = Shell.get_file_contents_utf8_sync(this.profile0);
-
-                let message = "Currently on '" + content.trim() + "' profile";
-                let item = new PopupMenu.PopupMenuItem(_(message));
-                tasksMenu.addMenuItem(item);
-                if (Icon != "") {temp.remove_actor(Icon);}
-
-                if (content.trim() == "low")
-                {
-                    Icon = this.LowPowerIcon;
-                }
-                else if (content.trim() == "mid")
-                {
-                    Icon = this.MidPowerIcon;
-                }
-                else
-                {
-                    Icon = this.HighPowerIcon;
-                }
-                temp.add_actor(Icon,1);
+                content = Shell.get_file_contents_utf8_sync(this.profile0);
             }
+            else
+            {
+                content = Shell.get_file_contents_utf8_sync(this.profile1);
+            }
+
+            let message = "Currently on '" + content.trim() + "' profile";
+            let item = new PopupMenu.PopupMenuItem(_(message));
+            tasksMenu.addMenuItem(item);
+            if (Icon != "") {temp.remove_actor(Icon);}
+
+            if (content.trim() == "low")
+            {
+                Icon = this.LowPowerIcon;
+            }
+            else if (content.trim() == "mid")
+            {
+                Icon = this.MidPowerIcon;
+            }
+            else if (content.trim() == "auto")
+            {
+                Icon = this.AutoPowerIcon;
+            }
+            else
+            {
+                Icon = this.HighPowerIcon;
+            }
+            temp.add_actor(Icon,1);
 
             // Separator
             this.Separator = new PopupMenu.PopupSeparatorMenuItem();
@@ -153,24 +162,32 @@ ProfileManager.prototype =
             tasksMenu.addMenuItem(midpowerbutton);
             let highpowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'high'"));
             tasksMenu.addMenuItem(highpowerbutton);
+            let autopowerbutton = new PopupMenu.PopupMenuItem(_("Set profile to 'auto'"));
+            tasksMenu.addMenuItem(autopowerbutton);
 
             //Give the buttons an action:
             lowpowerbutton.connect('activate',function()
             {
+                changeProfile("low",varfile0);
                 changeProfile("low",varfile1);
-                if (varfile2 != 0)      {changeProfile("low",varfile2);}
             });
 
             midpowerbutton.connect('activate',function()
             {
+                changeProfile("mid",varfile0);
                 changeProfile("mid",varfile1);
-                if (varfile2 != 0)      {changeProfile("mid",varfile2);}
             });
 
             highpowerbutton.connect('activate',function()
             {
+                changeProfile("high",varfile0);
                 changeProfile("high",varfile1);
-                if (varfile2 != 0)      {changeProfile("high",varfile2);}
+            });
+
+            autopowerbutton.connect('activate',function()
+            {
+                changeProfile("auto",varfile0);
+                changeProfile("auto",varfile1);	
             });
         },
 
@@ -178,13 +195,18 @@ ProfileManager.prototype =
         {
             // Refresh menu
             let fileM = Gio.file_new_for_path(this.profile0);
-            this.monitor = fileM.monitor(Gio.FileMonitorFlags.NONE, null);
-            this.monitor.connect('changed', Lang.bind(this, this._refresh));
+            this.monitor1 = fileM.monitor(Gio.FileMonitorFlags.NONE, null);
+            this.monitor1.connect('changed', Lang.bind(this, this._refresh));
+            // Refresh second card menu
+            let fileM2 = Gio.file_new_for_path(this.profile1);
+            this.monitor2 = fileM2.monitor(Gio.FileMonitorFlags.NONE, null);
+            this.monitor2.connect('changed', Lang.bind(this, this._refresh));
         },
 
         _disable: function()
         {
-            this.monitor.cancel();
+            this.monitor1.cancel();
+            this.monitor2.cancel();
         }
 }
 
@@ -221,6 +243,8 @@ function changeProfile(text,file)
             return result;
           }
     }
+
+	return -1;
 }
 
 function CheckForFile(filename)
@@ -239,7 +263,7 @@ function CheckForFile(filename)
 function CheckMethod(filename)
 {
     //Will check if the current power_method is set to 'profile'
-    method = Shell.get_file_contents_utf8_sync(filename);
+    let method = Shell.get_file_contents_utf8_sync(filename);
     if (method.trim() != "profile")
     {
         global.logError("Radeon Power Profile Manager: " + filename + " is not set for 'profile'. Please change this.");
